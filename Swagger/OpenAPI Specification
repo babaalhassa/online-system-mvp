@@ -1,0 +1,463 @@
+# Voting System MVP - OpenAPI 3.0 Specification
+
+openapi: 3.0.0
+info:
+  title: Voting System API
+  version: 1.0.0
+  description: Real-time online voting system with Paystack integration
+  contact:
+    name: Support
+    email: support@votingsystem.com
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development
+  - url: https://api.votingsystem.com/api
+    description: Production
+
+paths:
+  /auth/login:
+    post:
+      summary: Admin login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required: [email, password]
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+
+  /auth/register-admin:
+    post:
+      summary: Register new admin
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 6
+              required: [email, password]
+      responses:
+        '201':
+          description: Admin registered successfully
+        '400':
+          description: User already exists
+
+  /candidates:
+    get:
+      summary: Get all active candidates
+      tags: [Candidates]
+      responses:
+        '200':
+          description: List of candidates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Candidate'
+
+    post:
+      summary: Create a new candidate
+      tags: [Candidates]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                imageUrl:
+                  type: string
+                  format: uri
+              required: [name]
+      responses:
+        '201':
+          description: Candidate created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+        '401':
+          description: Unauthorized
+
+  /candidates/{id}:
+    patch:
+      summary: Update candidate
+      tags: [Candidates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                imageUrl:
+                  type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Candidate updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+
+    delete:
+      summary: Delete candidate
+      tags: [Candidates]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidate deleted
+
+  /votes:
+    post:
+      summary: Cast a vote
+      tags: [Votes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                candidateId:
+                  type: string
+                paymentRef:
+                  type: string
+                voterEmail:
+                  type: string
+                  format: email
+              required: [candidateId, paymentRef, voterEmail]
+      responses:
+        '201':
+          description: Vote cast successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+        '400':
+          description: Invalid payment or duplicate vote
+
+  /votes/summary:
+    get:
+      summary: Get vote summary with counts
+      tags: [Votes]
+      responses:
+        '200':
+          description: Vote summary
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    name:
+                      type: string
+                    votesCount:
+                      type: integer
+
+  /payments/initiate:
+    post:
+      summary: Initialize Paystack payment
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                amount:
+                  type: number
+                  description: Amount in Naira
+              required: [email, amount]
+      responses:
+        '200':
+          description: Payment initialized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paymentUrl:
+                    type: string
+                    format: uri
+                  reference:
+                    type: string
+                  paymentId:
+                    type: string
+
+  /payments/webhook:
+    post:
+      summary: Paystack webhook endpoint
+      tags: [Payments]
+      description: Webhook for Paystack payment confirmation
+      responses:
+        '200':
+          description: Webhook received
+
+  /payments/verify/{reference}:
+    get:
+      summary: Verify payment status
+      tags: [Payments]
+      parameters:
+        - in: path
+          name: reference
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success, failed]
+                  payment:
+                    $ref: '#/components/schemas/Payment'
+
+  /admin/stats:
+    get:
+      summary: Get admin dashboard statistics
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCandidates:
+                    type: integer
+                  totalVotes:
+                    type: integer
+                  totalRevenue:
+                    type: number
+                  topCandidates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Candidate'
+                  recentPayments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+
+  /admin/transactions:
+    get:
+      summary: Get payment transaction history
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, success, failed]
+        - in: query
+          name: email
+          schema:
+            type: string
+        - in: query
+          name: startDate
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: endDate
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Transaction history with summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                  payments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Payment'
+
+  /admin/export:
+    get:
+      summary: Export voting results
+      tags: [Admin]
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+            enum: [csv, xlsx]
+      responses:
+        '200':
+          description: File download
+          content:
+            text/csv:
+              schema:
+                type: string
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+
+    Candidate:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        votesCount:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Vote:
+      type: object
+      properties:
+        _id:
+          type: string
+        candidateId:
+          type: string
+        transactionId:
+          type: string
+        voterEmail:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        _id:
+          type: string
+        referenceId:
+          type: string
+        userEmail:
+          type: string
+        status:
+          type: string
+          enum: [pending, success, failed]
+        amount:
+          type: number
+        currency:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Candidates
+    description: Candidate management
+  - name: Votes
+    description: Voting operations
+  - name: Payments
+    description: Payment processing
+  - name: Admin
+    description: Admin dashboard
