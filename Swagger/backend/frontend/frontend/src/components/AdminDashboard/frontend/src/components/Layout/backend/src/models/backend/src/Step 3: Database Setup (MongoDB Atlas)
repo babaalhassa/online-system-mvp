@@ -1,0 +1,5 @@
+# 1. Create MongoDB Atlas account (mongodb.com/cloud/atlas)
+# 2. Create cluster
+# 3. Add IP whitelist (0.0.0.0/0 for testing)
+# 4. Create database user
+# 5. Copy connection string to .env
