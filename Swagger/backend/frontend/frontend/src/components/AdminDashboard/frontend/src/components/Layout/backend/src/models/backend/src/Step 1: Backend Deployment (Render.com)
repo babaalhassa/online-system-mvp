@@ -1,0 +1,11 @@
+# Create account on render.com
+# Connect GitHub repository
+# Create new Web Service
+
+# Environment Variables:
+NODE_ENV=production
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/voting_system
+JWT_SECRET=your_secret_here
+PAYSTACK_SECRET=sk_live_your_key
+PAYSTACK_PUBLIC=pk_live_your_key
+FRONTEND_URL=https://your-frontend.vercel.app
