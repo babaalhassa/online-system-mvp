@@ -1,0 +1,5 @@
+# 1. Create Paystack account (paystack.com)
+# 2. Get API keys (test and live)
+# 3. Configure webhook URL:
+#    https://your-backend.onrender.com/api/payments/webhook
+# 4. Copy webhook secret to .env
