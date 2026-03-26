@@ -1,0 +1,46 @@
+
+---
+
+## **9. Installation Script** (setup.sh)
+
+```bash name=setup.sh
+#!/bin/bash
+
+echo "🚀 Voting System MVP - Setup Script"
+echo "===================================="
+
+# Create root .env
+echo "Creating .env files..."
+cat > .env << EOF
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/voting_system
+JWT_SECRET=dev_secret_change_in_production
+PAYSTACK_SECRET=sk_test_your_secret
+PAYSTACK_PUBLIC=pk_test_your_public
+ADMIN_EMAIL=admin@votingsystem.com
+ADMIN_PASSWORD=Admin123!
+EOF
+
+# Setup backend
+echo "Setting up backend..."
+cd backend
+cp .env.example .env.dev
+npm install
+cd ..
+
+# Setup frontend
+echo "Setting up frontend..."
+cd frontend
+cp .env.local.example .env.local
+npm install
+cd ..
+
+echo ""
+echo "✅ Setup complete!"
+echo ""
+echo "📝 Next steps:"
+echo "1. Update .env files with your credentials"
+echo "2. Start backend: cd backend && npm run dev"
+echo "3. Start frontend: cd frontend && npm run dev"
+echo "4. Open http://localhost:3000"
+echo ""
