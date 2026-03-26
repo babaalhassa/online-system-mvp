@@ -1,0 +1,15 @@
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 16+
+- MongoDB (local or Atlas)
+- Paystack account
+- Docker (optional)
+
+### Local Development
+
+1. **Clone repository**
+   ```bash
+   git clone https://github.com/babaalhassa/voting-system-mvp.git
+   cd voting-system-mvp
